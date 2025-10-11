@@ -14,12 +14,15 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
-    # If using environment secrets, uncomment next line and replace with your environment name
+    # Uncomment and replace with your environment if using environment secrets
     environment: kube-secrete
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+
+    - name: List repo files for debugging
+      run: ls -lR
 
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v2
