@@ -1,0 +1,65 @@
+# Alternative to Ingress - Use NodePort for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuance-service-nodeport
+  namespace: kube-credential
+spec:
+  type: NodePort
+  selector:
+    app: issuance-service
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+    nodePort: 30000
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: verification-service-nodeport
+  namespace: kube-credential
+spec:
+  type: NodePort
+  selector:
+    app: verification-service
+  ports:
+  - name: http
+    port: 3001
+    targetPort: 3001
+    nodePort: 30001
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: issuance-frontend-nodeport
+  namespace: kube-credential
+spec:
+  type: NodePort
+  selector:
+    app: issuance-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30002
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: verification-frontend-nodeport
+  namespace: kube-credential
+spec:
+  type: NodePort
+  selector:
+    app: verification-frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30003
+    protocol: TCP
+---

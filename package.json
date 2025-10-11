@@ -1,0 +1,25 @@
+{
+  "name": "kube-credential-redis-system",
+  "version": "2.0.0",
+  "description": "Complete Redis Pub/Sub Credential Management System",
+  "scripts": {
+    "install:all": "npm run install:issuance && npm run install:verification",
+    "install:issuance": "cd services/issuance-service && npm install",
+    "install:verification": "cd services/verification-service && npm install",
+    "dev:issuance": "cd services/issuance-service && npm run dev",
+    "dev:verification": "cd services/verification-service && npm run dev",
+    "dev:all": "concurrently \"npm run dev:issuance\" \"npm run dev:verification\"",
+    "build:all": "npm run build:issuance && npm run build:verification",
+    "build:issuance": "cd services/issuance-service && npm run build",
+    "build:verification": "cd services/verification-service && npm run build",
+    "start:all": "concurrently \"npm run start:issuance\" \"npm run start:verification\"",
+    "start:issuance": "cd services/issuance-service && npm start",
+    "start:verification": "cd services/verification-service && npm start",
+    "docker:up": "docker-compose up --build",
+    "docker:down": "docker-compose down",
+    "redis:start": "docker run -d --name redis -p 6379:6379 redis:alpine"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

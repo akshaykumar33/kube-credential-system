@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # Redis - Event Store & Pub/Sub
+  redis:
+    image: redis:7-alpine
+    container_name: kube-credential-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server 
+      --appendonly yes 
+      --appendfsync everysec
+      --save 60 1000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Issuance Service
+  issuance-service:
+    build:
+      context: ./services/issuance-service
+      dockerfile: Dockerfile
+    container_name: kube-credential-issuance
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CORS_ORIGIN=*
+    volumes:
+      - ./services/issuance-service/data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Verification Service  
+  verification-service:
+    build:
+      context: ./services/verification-service
+      dockerfile: Dockerfile
+    container_name: kube-credential-verification
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CORS_ORIGIN=*
+    volumes:
+      - ./services/verification-service/data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+      issuance-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # Frontend Apps (Optional - can run separately)
+  issuance-frontend:
+    build:
+      context: ./frontend/issuance-app
+      dockerfile: Dockerfile
+    container_name: kube-credential-issuance-ui
+    ports:
+      - "3002:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - issuance-service
+    restart: unless-stopped
+
+  verification-frontend:
+    build:
+      context: ./frontend/verification-app
+      dockerfile: Dockerfile
+    container_name: kube-credential-verification-ui
+    ports:
+      - "3003:80"
+    environment:
+      - VITE_API_URL=http://localhost:3001
+    depends_on:
+      - verification-service
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  default:
+    name: kube-credential-network
+    driver: bridge

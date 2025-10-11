@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: kube-credential
+data:
+  NODE_ENV: "production"
+  CORS_ORIGIN: "*"
+  REDIS_HOST: "redis.kube-credential.svc.cluster.local"
+  REDIS_PORT: "6379"
+---
