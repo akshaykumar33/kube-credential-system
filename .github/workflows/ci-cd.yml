@@ -1,16 +1,22 @@
-name: CI-CD Pipeline
+name: CI-CD Pipeline for EC2 Kubernetes
 
 on:
   push:
     branches:
-    - main
+      - main
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAMESPACE: akshaykumar33
+  KUBE_NAMESPACE: kube-credential
 
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@v2
@@ -26,28 +32,28 @@ jobs:
       with:
         context: ./services/issuance-service
         push: true
-        tags: docker.io/akshaykumar33/kube-credential-issuance:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/issuance-service:latest
 
     - name: Build & Push Verification Image
       uses: docker/build-push-action@v4
       with:
         context: ./services/verification-service
         push: true
-        tags: docker.io/akshaykumar33/kube-credential-verification:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/verification-service:latest
 
     - name: Build & Push Issuance Frontend Image
       uses: docker/build-push-action@v4
       with:
         context: ./frontend/issuance-app
         push: true
-        tags: docker.io/akshaykumar33/kube-credential-issuance-ui:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/issuance-frontend:latest
 
     - name: Build & Push Verification Frontend Image
       uses: docker/build-push-action@v4
       with:
         context: ./frontend/verification-app
         push: true
-        tags: docker.io/akshaykumar33/kube-credential-verification-ui:latest
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/verification-frontend:latest
 
     - name: Setup kubectl
       uses: azure/setup-kubectl@v3
@@ -59,7 +65,8 @@ jobs:
 
     - name: Kubernetes Deployments Rollout Restart
       run: |
-        kubectl rollout restart deployment/issuance-service -n kube-credential
-        kubectl rollout restart deployment/verification-service -n kube-credential
-        kubectl rollout restart deployment/issuance-frontend -n kube-credential
-        kubectl rollout restart deployment/verification-frontend -n kube-credential
+        kubectl apply -f k8s/
+        kubectl rollout restart deployment/issuance-service -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout restart deployment/verification-service -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout restart deployment/issuance-frontend -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout restart deployment/verification-frontend -n ${{ env.KUBE_NAMESPACE }}
