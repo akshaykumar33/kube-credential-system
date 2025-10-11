@@ -42,33 +42,33 @@
 # Build your application images
 # Build issuance service
 cd services/issuance-service
-docker build -t yourdockerhub/kube-credential-issuance:latest .
+docker build -t akshaykumar33/kube-credential-issuance:latest .
 
 # Build verification service
 cd ../verification-service
-docker build -t yourdockerhub/kube-credential-verification:latest .
+docker build -t akshaykumar33/kube-credential-verification:latest .
 
 # Build issuance frontend
 cd ../../frontend/issuance-app
-docker build -t yourdockerhub/kube-credential-issuance-ui:latest .
+docker build -t akshaykumar33/kube-credential-issuance-ui:latest .
 
 # Build verification frontend
 cd ../verification-app
-docker build -t yourdockerhub/kube-credential-verification-ui:latest .
+docker build -t akshaykumar33/kube-credential-verification-ui:latest .
 
 
 # Push to your registry
-docker push yourdockerhub/kube-credential-issuance:latest
-docker push yourdockerhub/kube-credential-verification:latest
-docker push yourdockerhub/kube-credential-issuance-ui:latest
-docker push yourdockerhub/kube-credential-verification-ui:latest
+docker push akshaykumar33/kube-credential-issuance:latest
+docker push akshaykumar33/kube-credential-verification:latest
+docker push akshaykumar33/kube-credential-issuance-ui:latest
+docker push akshaykumar33/kube-credential-verification-ui:latest
 ```
 
 ### Step 2: Update Image References
-Replace `yourdockerhub` with your actual Docker Hub username in all YAML files:
+Replace `akshaykumar33` with your actual Docker Hub username in all YAML files:
 ```bash
 # Quick replacement (Unix/Linux/Mac)
-sed -i 's/yourdockerhub/your-actual-username/g' k8s/*.yaml
+sed -i 's/akshaykumar33/your-actual-username/g' k8s/*.yaml
 
 # Or manually edit each file
 # Update image names in: issuance.yaml, verification.yaml, issuance-frontend.yaml, verification-frontend.yaml
@@ -80,6 +80,7 @@ sed -i 's/yourdockerhub/your-actual-username/g' k8s/*.yaml
 chmod +x *.sh
 
 # Run interactive deployment
+cd ../.. && cd kube-credential-k8s
 ./deploy.sh
 ```
 

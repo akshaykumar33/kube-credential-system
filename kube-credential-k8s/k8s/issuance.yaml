@@ -16,53 +16,55 @@ spec:
         app: issuance-service
     spec:
       containers:
-      - name: issuance-service
-        image: akshaykumar33/kube-credential-issuance:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-        env:
-        - name: NODE_ENV
-          value: "production"
-        - name: PORT
-          value: "3000"
-        - name: REDIS_HOST
-          value: "redis.kube-credential.svc.cluster.local"
-        - name: REDIS_PORT
-          value: "6379"
-        - name: CORS_ORIGIN
-          value: "*"
-        - name: POD_NAME
-          valueFrom:
-          fieldRef:
-            fieldPath: metadata.name
-        volumeMounts:
-        - name: issuance-data
-          mountPath: /app/data
-        resources:
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: issuance-service
+          image: akshaykumar33/kube-credential-issuance:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: REDIS_HOST
+              value: "redis.kube-credential.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: CORS_ORIGIN
+              value: "*"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: issuance-data
+              mountPath: /app/data
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
       volumes:
-      - name: issuance-data
-        persistentVolumeClaim:
-          claimName: issuance-data-pvc
+        - name: issuance-data
+          persistentVolumeClaim:
+            claimName: issuance-data-pvc
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -72,9 +74,8 @@ spec:
   selector:
     app: issuance-service
   ports:
-  - name: http
-    port: 3000
-    targetPort: 3000
-    protocol: TCP
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
   type: ClusterIP
----
