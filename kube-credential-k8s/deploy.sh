@@ -40,7 +40,7 @@ echo "🗄️ Deploying Redis..."
 kubectl apply -f k8s/redis.yaml
 
 echo "⏳ Waiting for Redis to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment/redis -n kube-credential
+kubectl wait --for=condition=available --timeout=500s deployment/redis -n kube-credential
 
 # Deploy Backend Services
 echo "🏢 Deploying Issuance Service..."
@@ -50,8 +50,8 @@ echo "🔍 Deploying Verification Service..."
 kubectl apply -f k8s/verification.yaml
 
 echo "⏳ Waiting for backend services to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment/issuance-service -n kube-credential
-kubectl wait --for=condition=available --timeout=300s deployment/verification-service -n kube-credential
+kubectl wait --for=condition=available --timeout=500s deployment/issuance-service -n kube-credential
+kubectl wait --for=condition=available --timeout=500s deployment/verification-service -n kube-credential
 
 # Deploy Frontends
 echo "🌐 Deploying Frontend Applications..."
@@ -59,8 +59,8 @@ kubectl apply -f k8s/issuance-frontend.yaml
 kubectl apply -f k8s/verification-frontend.yaml
 
 echo "⏳ Waiting for frontends to be ready..."
-kubectl wait --for=condition=available --timeout=300s deployment/issuance-frontend -n kube-credential
-kubectl wait --for=condition=available --timeout=300s deployment/verification-frontend -n kube-credential
+kubectl wait --for=condition=available --timeout=500s deployment/issuance-frontend -n kube-credential
+kubectl wait --for=condition=available --timeout=500s deployment/verification-frontend -n kube-credential
 
 # Setup external access
 echo ""
@@ -83,7 +83,7 @@ case $access_type in
         fi
 
         echo "Waiting for ingress controller to become ready..."
-        kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+        kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=500s
 
         # Apply your ingress resource
         kubectl apply -f k8s/ingress.yaml
