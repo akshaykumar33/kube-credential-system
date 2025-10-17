@@ -12,7 +12,7 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     # Uncomment and replace if using environment secrets
     environment: kube-secrete
@@ -74,8 +74,9 @@ jobs:
 
     - name: Deploy Manifests and Rollout Restart
       run: |
+        kubectl apply -f kube-credential-k8s/k8s/namespace.yaml
         kubectl apply -f kube-credential-k8s/k8s/
-        kubectl rollout restart deployment/issuance-service -n ${{ env.KUBE_NAMESPACE }}
-        kubectl rollout restart deployment/verification-service -n ${{ env.KUBE_NAMESPACE }}
-        kubectl rollout restart deployment/issuance-frontend -n ${{ env.KUBE_NAMESPACE }}
-        kubectl rollout restart deployment/verification-frontend -n ${{ env.KUBE_NAMESPACE }}
+        kubectl rollout restart deployment/issuance-service -n kube-credential
+        kubectl rollout restart deployment/verification-service -n kube-credential
+        kubectl rollout restart deployment/issuance-frontend -n kube-credential
+        kubectl rollout restart deployment/verification-frontend -n kube-credential
