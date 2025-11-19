@@ -23,6 +23,7 @@ services:
 
   # Issuance Service
   issuance-service:
+    image: akshaykumar33/kube-credential-issuance:latest
     build:
       context: ./services/issuance-service
       dockerfile: Dockerfile
@@ -44,6 +45,7 @@ services:
 
   # Verification Service  
   verification-service:
+    image: akshaykumar33/kube-credential-verification:latest
     build:
       context: ./services/verification-service
       dockerfile: Dockerfile
@@ -67,6 +69,7 @@ services:
 
   # Frontend Apps (Optional - can run separately)
   issuance-frontend:
+    image: akshaykumar33/kube-credential-issuance-ui:latest
     build:
       context: ./frontend/issuance-app
       dockerfile: Dockerfile
@@ -80,6 +83,7 @@ services:
     restart: unless-stopped
 
   verification-frontend:
+    image: akshaykumar33/kube-credential-verification-ui:latest
     build:
       context: ./frontend/verification-app
       dockerfile: Dockerfile
