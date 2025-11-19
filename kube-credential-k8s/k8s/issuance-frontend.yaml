@@ -29,7 +29,7 @@ spec:
             memory: "125Mi"
             cpu: "100m"
           requests:
-            memory: "128Mi"
+            memory: "125Mi"
             cpu: "100m"
         livenessProbe:
           httpGet:
