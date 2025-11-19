@@ -23,10 +23,7 @@ services:
 
   # Issuance Service
   issuance-service:
-    image: akshaykumar33/kube-credential-issuance:latest
-    build:
-      context: ./services/issuance-service
-      dockerfile: Dockerfile
+    image: yourdockerhub/issuance-service:latest
     container_name: kube-credential-issuance
     ports:
       - "3000:3000"
@@ -45,10 +42,7 @@ services:
 
   # Verification Service  
   verification-service:
-    image: akshaykumar33/kube-credential-verification:latest
-    build:
-      context: ./services/verification-service
-      dockerfile: Dockerfile
+    image: yourdockerhub/verification-service:latest
     container_name: kube-credential-verification
     ports:
       - "3001:3001"
@@ -67,34 +61,40 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # Frontend Apps (Optional - can run separately)
+  # Issuance Frontend  
   issuance-frontend:
-    image: akshaykumar33/kube-credential-issuance-ui:latest
-    build:
-      context: ./frontend/issuance-app
-      dockerfile: Dockerfile
+    image: yourdockerhub/issuance-frontend:latest
     container_name: kube-credential-issuance-ui
     ports:
       - "3002:80"
     environment:
-      - VITE_API_URL=http://issuance-service:3000
+      - VITE_API_URL=http://<EC2_PUBLIC_IP>:3000
     depends_on:
       - issuance-service
     restart: unless-stopped
 
+  # Verification Frontend  
   verification-frontend:
-    image: akshaykumar33/kube-credential-verification-ui:latest
-    build:
-      context: ./frontend/verification-app
-      dockerfile: Dockerfile
+    image: yourdockerhub/verification-frontend:latest
     container_name: kube-credential-verification-ui
     ports:
       - "3003:80"
     environment:
-      - VITE_API_URL=http://verification-service:3001
+      - VITE_API_URL=http://<EC2_PUBLIC_IP>:3001
     depends_on:
       - verification-service
     restart: unless-stopped
+
+  # 🔥 Watchtower (Auto-Update EC2 Images)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=30
+    restart: unless-stopped
+
 
 volumes:
   redis-data:
