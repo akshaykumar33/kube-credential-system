@@ -34,11 +34,11 @@ spec:
           mountPath: /data
         resources:
           limits:
-            memory: "512Mi"
-            cpu: "500m"
-          requests:
             memory: "256Mi"
             cpu: "250m"
+          requests:
+            memory: "125Mi"
+            cpu: "100m"
         livenessProbe:
           exec:
             command:
