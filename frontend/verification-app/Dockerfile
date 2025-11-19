@@ -18,12 +18,10 @@ RUN npm run build
 # Production stage with Nginx
 FROM nginx:alpine
 
-# Copy built app
-COPY --from=builder /app/verification-app/dist /usr/share/nginx/html
+RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy nginx configuration
+COPY --from=builder /app/verification-app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

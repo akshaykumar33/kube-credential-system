@@ -74,7 +74,7 @@ services:
     ports:
       - "3002:80"
     environment:
-      - VITE_API_URL=http://localhost:3000
+      - VITE_API_URL=http://issuance-service:3000
     depends_on:
       - issuance-service
     restart: unless-stopped
@@ -87,7 +87,7 @@ services:
     ports:
       - "3003:80"
     environment:
-      - VITE_API_URL=http://localhost:3001
+      - VITE_API_URL=http://verification-service:3001
     depends_on:
       - verification-service
     restart: unless-stopped
