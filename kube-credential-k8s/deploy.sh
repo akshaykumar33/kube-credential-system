@@ -183,6 +183,7 @@
 # kubectl wait --for=condition=available --timeout=600s deployment --all -n kube-credential
 
 # echo "🎉 Deployment complete!"
+
 #!/bin/bash
 # deploy.sh
 # Full reset + NodePort deployment + port-forwarding
@@ -190,7 +191,8 @@
 
 set -e
 
-SCRIPT_DIR="$(pwd)"  # make sure you run this from kube-credential-k8s
+# ✅ Set the script directory explicitly
+SCRIPT_DIR="/home/ubuntu/kube-credential-system/kube-credential-k8s"  # change this to your full path
 
 echo "🚀 Starting full deployment sequence..."
 echo "==================================="
