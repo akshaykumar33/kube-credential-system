@@ -186,7 +186,7 @@
 #!/bin/bash
 # deploy.sh
 # Full reset + NodePort deployment + port-forwarding
-# Directory: kube-credential/kube-credential-k8s
+# Directory: kube-credential-system/kube-credential-k8s
 
 set -e
 
