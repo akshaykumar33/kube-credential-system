@@ -3,23 +3,50 @@
   "version": "2.0.0",
   "description": "Complete Redis Pub/Sub Credential Management System",
   "scripts": {
-    "install:all": "npm run install:issuance && npm run install:verification",
+    "install:all": "npm run install:services && npm run install:frontend",
+    "install:services": "npm run install:issuance && npm run install:verification",
+    "install:frontend": "npm run install:issuance-app && npm run install:verification-app",
+
     "install:issuance": "cd services/issuance-service && npm install",
     "install:verification": "cd services/verification-service && npm install",
+    "install:issuance-app": "cd frontend/issuance-app && npm install",
+    "install:verification-app": "cd frontend/verification-app && npm install",
+
     "dev:issuance": "cd services/issuance-service && npm run dev",
     "dev:verification": "cd services/verification-service && npm run dev",
-    "dev:all": "concurrently \"npm run dev:issuance\" \"npm run dev:verification\"",
-    "build:all": "npm run build:issuance && npm run build:verification",
+    "dev:issuance-app": "cd frontend/issuance-app && npm run dev",
+    "dev:verification-app": "cd frontend/verification-app && npm run dev",
+    "dev:services": "concurrently \"npm run dev:issuance\" \"npm run dev:verification\"",
+    "dev:frontend": "concurrently \"npm run dev:issuance-app\" \"npm run dev:verification-app\"",
+    "dev:all": "concurrently \"npm run dev:services\" \"npm run dev:frontend\"",
+
     "build:issuance": "cd services/issuance-service && npm run build",
     "build:verification": "cd services/verification-service && npm run build",
-    "start:all": "concurrently \"npm run start:issuance\" \"npm run start:verification\"",
+    "build:issuance-app": "cd frontend/issuance-app && npm run build",
+    "build:verification-app": "cd frontend/verification-app && npm run build",
+    "build:services": "npm run build:issuance && npm run build:verification",
+    "build:frontend": "npm run build:issuance-app && npm run build:verification-app",
+    "build:all": "npm run build:services && npm run build:frontend",
+
     "start:issuance": "cd services/issuance-service && npm start",
     "start:verification": "cd services/verification-service && npm start",
+    "start:issuance-app": "cd frontend/issuance-app && npm start",
+    "start:verification-app": "cd frontend/verification-app && npm start",
+    "start:services": "concurrently \"npm run start:issuance\" \"npm run start:verification\"",
+    "start:frontend": "concurrently \"npm run start:issuance-app\" \"npm run start:verification-app\"",
+    "start:all": "concurrently \"npm run start:services\" \"npm run start:frontend\"",
+
     "docker:up": "docker-compose up --build",
     "docker:down": "docker-compose down",
-    "redis:start": "docker run -d --name redis -p 6379:6379 redis:alpine"
+    "docker:rm":"docker-compose down --rmi all -v && docker system prune -a --volumes",
+    "docker:run" :"docker-compose build && docker-compose up -d",
+
+    "redis:start": "docker run -d --name redis -p 6379:6379 redis:alpine",
+    "redis:stop": "docker stop redis && docker rm redis"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"
-  }
+  },
+  "author": "Kube",
+  "license": "MIT"
 }
