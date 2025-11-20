@@ -29,10 +29,10 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-issuance
     ports:
-      - "3000:3000"
+      - "7000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=7000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=*
@@ -51,10 +51,10 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-verification
     ports:
-      - "3001:3001"
+      - "7001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=7001
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=*
@@ -75,10 +75,10 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-issuance-ui
     ports:
-      - "3002:80"
+      - "7002:80"
     environment:
-      # - VITE_API_URL=http://issuance-service:3000
-        - VITE_API_URL=http://issuance-service.kube-credential.svc.cluster.local:3000
+      - VITE_API_URL=http://issuance-service:7000
+        # - VITE_API_URL=http://issuance-service.kube-credential.svc.cluster.local:3000
     depends_on:
       - issuance-service
     restart: unless-stopped
@@ -90,22 +90,22 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-verification-ui
     ports:
-      - "3003:80"
+      - "7003:80"
     environment:
-      # - VITE_API_URL=http://verification-service:3001
-        - VITE_API_URL='http://verification-service.kube-credential.svc.cluster.local:3001'
+      - VITE_API_URL=http://verification-service:7001
+        # - VITE_API_URL='http://verification-service.kube-credential.svc.cluster.local:3001'
     depends_on:
       - verification-service
     restart: unless-stopped
-#  # 🔥 Watchtower (Auto-Update EC2 Images)
-#   watchtower:
-#     image: containrrr/watchtower
-#     container_name: watchtower
-#     volumes:
-#       - /var/run/docker.sock:/var/run/docker.sock
-#     environment:
-#       - WATCHTOWER_POLL_INTERVAL=30
-#     restart: unless-stopped
+ # 🔥 Watchtower (Auto-Update EC2 Images)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=30
+    restart: unless-stopped
 
 volumes:
   redis-data:
