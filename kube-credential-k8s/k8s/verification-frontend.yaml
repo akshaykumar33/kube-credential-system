@@ -26,8 +26,11 @@ spec:
         # - name: VITE_API_URL
         #   value: "http://verification-service:3001"
         #for browser  
+          # - name: VITE_API_URL
+          #   value: "http://verification-service.kube-credential.svc.cluster.local:3001"
+        #for pods acessing each other  
           - name: VITE_API_URL
-            value: "http://verification-service.kube-credential.svc.cluster.local:3001"
+            value: "http://13.233.92.254:3001"
         resources:
           limits:
             memory: "125Mi"
