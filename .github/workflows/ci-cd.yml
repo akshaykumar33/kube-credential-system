@@ -1,3 +1,89 @@
+# name: Kube Credential CI/CD
+
+# on:
+#   push:
+#     branches: ["main"]
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     environment: kube-secrete
+    
+#     steps:
+#     - name: Checkout repo
+#       uses: actions/checkout@v3
+
+#     - name: Log in to Docker Hub
+#       uses: docker/login-action@v3
+#       with:
+#         username: ${{ secrets.DOCKER_USERNAME }}
+#         password: ${{ secrets.DOCKER_PASSWORD }}
+
+#     # ======================
+#     # BACKEND IMAGES
+#     # ======================
+#     - name: Build & push Issuance Backend
+#       uses: docker/build-push-action@v6
+#       with:
+#         context: ./services/issuance-service
+#         push: true
+#         tags: |
+#           ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance:latest
+
+#     - name: Build & push Verification Backend
+#       uses: docker/build-push-action@v6
+#       with:
+#         context: ./services/verification-service
+#         push: true
+#         tags: |
+#           ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification:latest
+
+#     # ======================
+#     # FRONTEND IMAGES
+#     # ======================
+#     - name: Build & push Issuance Frontend
+#       uses: docker/build-push-action@v6
+#       with:
+#         context: ./frontend/issuance-app
+#         push: true
+#         tags: |
+#           ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance-ui:latest
+
+#     - name: Build & push Verification Frontend
+#       uses: docker/build-push-action@v6
+#       with:
+#         context: ./frontend/verification-app
+#         push: true
+#         tags: |
+#           ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification-ui:latest
+
+#     # ======================
+#     # COPY ONLY k8s FOLDER TO EC2
+#     # ======================
+#     - name: Copy Kubernetes manifests to EC2
+#       uses: appleboy/scp-action@v0.1.7
+#       with:
+#         host: ${{ secrets.EC2_HOST }}
+#         username: ubuntu
+#         key: ${{ secrets.EC2_SSH_KEY }}
+#         source: "./kube-credential-k8s/"
+#         target: "~/kube-credential/"
+
+#     # ======================
+#     # DEPLOY ON EC2
+#     # ======================
+#     - name: Deploy to EC2
+#       uses: appleboy/ssh-action@v1.2.0
+#       with:
+#         host: ${{ secrets.EC2_HOST }}
+#         username: ubuntu
+#         key: ${{ secrets.EC2_SSH_KEY }}
+#         script: |
+#           cd ~/kube-credential/
+#           chmod +x deploy.sh
+#           echo "🚀 Starting deployment in background..."
+#           nohup ./deploy.sh > deploy.log 2>&1 &
+
 name: Kube Credential CI/CD
 
 on:
@@ -8,58 +94,73 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: kube-secrete
-    
+
     steps:
+    # -------------------------
+    # 1️⃣ Checkout repo
+    # -------------------------
     - name: Checkout repo
       uses: actions/checkout@v3
 
+    # -------------------------
+    # 2️⃣ Docker login
+    # -------------------------
     - name: Log in to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    # ======================
-    # BACKEND IMAGES
-    # ======================
+    # -------------------------
+    # 3️⃣ Backend images
+    # -------------------------
     - name: Build & push Issuance Backend
       uses: docker/build-push-action@v6
       with:
         context: ./services/issuance-service
         push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance:latest
 
     - name: Build & push Verification Backend
       uses: docker/build-push-action@v6
       with:
         context: ./services/verification-service
         push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification:latest
 
-    # ======================
-    # FRONTEND IMAGES
-    # ======================
+    # -------------------------
+    # 4️⃣ Frontend runtime config
+    # -------------------------
+    - name: Set frontend runtime config (Issuance)
+      run: |
+        mkdir -p ./frontend/issuance-app/public
+        echo "window.__APP_CONFIG__ = { API_BASE_URL: 'http://${{ secrets.EC2_HOST }}:3000' };" > ./frontend/issuance-app/public/config.js
+
+    - name: Set frontend runtime config (Verification)
+      run: |
+        mkdir -p ./frontend/verification-app/public
+        echo "window.__APP_CONFIG__ = { API_BASE_URL: 'http://${{ secrets.EC2_HOST }}:3001' };" > ./frontend/verification-app/public/config.js
+
+    # -------------------------
+    # 5️⃣ Frontend images
+    # -------------------------
     - name: Build & push Issuance Frontend
       uses: docker/build-push-action@v6
       with:
         context: ./frontend/issuance-app
         push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance-ui:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-issuance-ui:latest
 
     - name: Build & push Verification Frontend
       uses: docker/build-push-action@v6
       with:
         context: ./frontend/verification-app
         push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification-ui:latest
+        tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification-ui:latest
 
-    # ======================
-    # COPY ONLY k8s FOLDER TO EC2
-    # ======================
+    # -------------------------
+    # 6️⃣ Copy Kubernetes manifests to EC2
+    # -------------------------
     - name: Copy Kubernetes manifests to EC2
       uses: appleboy/scp-action@v0.1.7
       with:
@@ -69,9 +170,9 @@ jobs:
         source: "./kube-credential-k8s/"
         target: "~/kube-credential/"
 
-    # ======================
-    # DEPLOY ON EC2
-    # ======================
+    # -------------------------
+    # 7️⃣ Deploy on EC2
+    # -------------------------
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v1.2.0
       with:
@@ -81,5 +182,7 @@ jobs:
         script: |
           cd ~/kube-credential/
           chmod +x deploy.sh
+          echo "💥 Killing existing port-forward processes..."
+          pkill -f "kubectl port-forward" || true
           echo "🚀 Starting deployment in background..."
           nohup ./deploy.sh > deploy.log 2>&1 &
