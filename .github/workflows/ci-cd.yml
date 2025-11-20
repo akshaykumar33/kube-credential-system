@@ -187,10 +187,6 @@ jobs:
 
           chmod +x deploy.sh
 
-          # Kill old port-forwards
-          echo "💥 Killing old port-forward processes..."
-          pkill -f "kubectl port-forward" || true
-
           # Start deploy script in background
           echo "🚀 Starting deploy.sh in background..."
           nohup ./deploy.sh > deploy.log 2>&1 &
