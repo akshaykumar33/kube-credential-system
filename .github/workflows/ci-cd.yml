@@ -111,7 +111,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
 
     # -------------------------
-    # 3️⃣ Build & push backend images
+    # 3️⃣ Backend images
     # -------------------------
     - name: Build & push Issuance Backend
       uses: docker/build-push-action@v6
@@ -128,7 +128,20 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification:latest
 
     # -------------------------
-    # 4️⃣ Build & push frontend images
+    # 4️⃣ Frontend runtime config
+    # -------------------------
+    - name: Set frontend runtime config (Issuance)
+      run: |
+        mkdir -p ./frontend/issuance-app/public
+        echo "window.__APP_CONFIG__ = { API_BASE_URL: 'http://${{ secrets.EC2_HOST }}:3000' };" > ./frontend/issuance-app/public/config.js
+
+    - name: Set frontend runtime config (Verification)
+      run: |
+        mkdir -p ./frontend/verification-app/public
+        echo "window.__APP_CONFIG__ = { API_BASE_URL: 'http://${{ secrets.EC2_HOST }}:3001' };" > ./frontend/verification-app/public/config.js
+
+    # -------------------------
+    # 5️⃣ Frontend images
     # -------------------------
     - name: Build & push Issuance Frontend
       uses: docker/build-push-action@v6
@@ -145,15 +158,7 @@ jobs:
         tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification-ui:latest
 
     # -------------------------
-    # 5️⃣ Check SSH connectivity
-    # -------------------------
-    - name: Check SSH connectivity
-      run: |
-        echo "Checking SSH connectivity to EC2..."
-        nc -zv ${{ secrets.EC2_HOST }} 22 || exit 1
-
-    # -------------------------
-    # 6️⃣ Copy Kubernetes manifests & deploy.sh
+    # 6️⃣ Copy Kubernetes manifests to EC2
     # -------------------------
     - name: Copy Kubernetes manifests to EC2
       uses: appleboy/scp-action@v0.1.7
@@ -161,9 +166,8 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: "./kube-credential-k8s/"   # include deploy.sh here
-        target: "~/kube-credential/"
-        port: 22
+        source: "./kube-credential-k8s/"
+        target: "~/kube-credential-system/"
 
     # -------------------------
     # 7️⃣ Deploy on EC2
@@ -175,28 +179,44 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
-        timeout: 120s
+        timeout: 300s
         script: |
-          cd ~/kube-credential/
+          # Remove old folder if it exists
+          if [ -d ~/kube-credential-system ]; then
+            echo "🧹 Removing old kube-credential-system folder..."
+            rm -rf ~/kube-credential-system
+          fi
 
-          # Check deploy.sh exists
+          if [ -d ~/kube-credential ]; then
+            echo "🧹 Removing old kube-credential folder..."
+            rm -rf ~/kube-credential
+          fi
+          
+          # Clone fresh repo
+          echo "📥 Cloning fresh repo..."
+          git clone https://github.com/akshaykumar33/kube-credential-system.git ~/kube-credential-system
+
+          # Navigate to Kubernetes manifests folder
+          echo "🔹 Navigating to Kubernetes manifests folder..."
+          cd ~/kube-credential-system/kube-credential-k8s/
+
+          # Ensure deploy.sh exists
           if [ ! -f deploy.sh ]; then
             echo "❌ deploy.sh not found!"
             exit 1
           fi
-
           chmod +x deploy.sh
 
-          # Kill old port-forwards
+          # Kill old port-forward processes
           echo "💥 Killing old port-forward processes..."
           pkill -f "kubectl port-forward" || true
 
-          # Start deploy script in background
+          # Start deployment in background
           echo "🚀 Starting deploy.sh in background..."
           nohup ./deploy.sh > deploy.log 2>&1 &
 
     # -------------------------
-    # 8️⃣ Verify Kubernetes pods
+    # 8️⃣ Verify Kubernetes pods are ready
     # -------------------------
     - name: Verify Kubernetes pods
       uses: appleboy/ssh-action@v1.2.0
@@ -205,7 +225,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
-        timeout: 120
+        timeout: 300s
         script: |
           echo "🔎 Checking Kubernetes pod status..."
           kubectl get pods -n kube-credential
