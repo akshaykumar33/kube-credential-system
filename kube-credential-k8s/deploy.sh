@@ -167,19 +167,61 @@
 # echo "  kubectl scale deployment/issuance-service --replicas=3 -n kube-credential"
 # echo "  kubectl port-forward service/issuance-service 3000:3000 -n kube-credential"
 # echo "  ./undeploy.sh       # Cleanup"
+# #!/bin/bash
+# set -e
+
+# echo "♻️ Deleting old pods..."
+# kubectl delete pod --all -n kube-credential --force --grace-period=0 || true
+
+# echo "📦 Applying new manifests..."
+# kubectl apply -f k8s/
+
+# echo "🔄 Restarting deployments..."
+# kubectl rollout restart deployment -n kube-credential
+
+# echo "⏳ Waiting for deployments to become available..."
+# kubectl wait --for=condition=available --timeout=600s deployment --all -n kube-credential
+
+# echo "🎉 Deployment complete!"
 #!/bin/bash
+# deploy.sh
+# Full reset + NodePort deployment + port-forwarding
+# Directory: kube-credential/kube-credential-k8s
+
 set -e
 
-echo "♻️ Deleting old pods..."
-kubectl delete pod --all -n kube-credential --force --grace-period=0 || true
+SCRIPT_DIR="$(pwd)"  # make sure you run this from kube-credential-k8s
 
-echo "📦 Applying new manifests..."
-kubectl apply -f k8s/
+echo "🚀 Starting full deployment sequence..."
+echo "==================================="
 
-echo "🔄 Restarting deployments..."
-kubectl rollout restart deployment -n kube-credential
+# Step 1: Cleanup
+if [ -f "$SCRIPT_DIR/undeploy.sh" ]; then
+    echo "🧹 Running undeploy.sh to clean existing resources..."
+    chmod +x "$SCRIPT_DIR/undeploy.sh"
+    "$SCRIPT_DIR/undeploy.sh"
+else
+    echo "⚠️ undeploy.sh not found!"
+fi
 
-echo "⏳ Waiting for deployments to become available..."
-kubectl wait --for=condition=available --timeout=600s deployment --all -n kube-credential
+# Step 2: Initial setup (force NodePort)
+if [ -f "$SCRIPT_DIR/initial-setup.sh" ]; then
+    echo "⚙️ Running initial-setup.sh (NodePort mode, non-interactive)..."
+    chmod +x "$SCRIPT_DIR/initial-setup.sh"
+    # Pipe "N" automatically to skip ingress and choose NodePort
+    echo "N" | "$SCRIPT_DIR/initial-setup.sh"
+else
+    echo "⚠️ initial-setup.sh not found!"
+fi
 
-echo "🎉 Deployment complete!"
+# Step 3: Port-forward all services
+if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
+    echo "🔗 Starting port-forwarding in background..."
+    chmod +x "$SCRIPT_DIR/port-forward-all.sh"
+    "$SCRIPT_DIR/port-forward-all.sh"
+else
+    echo "⚠️ port-forward-all.sh not found!"
+fi
+
+echo ""
+echo "🎉 Full deployment with NodePort + port-forwarding complete!"
