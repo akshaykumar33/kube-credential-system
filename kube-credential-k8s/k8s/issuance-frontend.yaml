@@ -22,8 +22,12 @@ spec:
         ports:
         - containerPort: 80
         env:
-        - name: VITE_API_URL
-          value: "http://issuance-service:3000"
+        #for local m/c
+        # - name: VITE_API_URL
+        #   value: "http://verification-service:3000"
+        #for browser  
+          - name: VITE_API_URL
+            value: "http://issuance-service.kube-credential.svc.cluster.local:3000"
         resources:
           limits:
             memory: "125Mi"

@@ -22,8 +22,12 @@ spec:
         ports:
         - containerPort: 80
         env:
-        - name: VITE_API_URL
-          value: "http://verification-service:3001"
+        #for local m/c
+        # - name: VITE_API_URL
+        #   value: "http://verification-service:3001"
+        #for browser  
+          - name: VITE_API_URL
+            value: "http://verification-service.kube-credential.svc.cluster.local:3001"
         resources:
           limits:
             memory: "125Mi"
