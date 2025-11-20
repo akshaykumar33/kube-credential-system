@@ -39,8 +39,8 @@
     "docker:up": "docker-compose up --build",
     "docker:down": "docker-compose down",
     "docker:rm":"docker-compose down --rmi all -v && docker system prune -a --volumes",
-    "docker:run" :"docker-compose build && docker-compose up -d",
-
+    "docker:run-all" :"docker-compose build && docker-compose up -d",
+    "docker:push-all":"docker-compose push",
     "redis:start": "docker run -d --name redis -p 6379:6379 redis:alpine",
     "redis:stop": "docker stop redis && docker rm redis"
   },
