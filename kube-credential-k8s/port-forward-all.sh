@@ -7,6 +7,14 @@ NAMESPACE="kube-credential"
 LOG_DIR="./port-forward-logs"
 mkdir -p $LOG_DIR
 
+echo "💥 Killing any existing port-forward processes..."
+pkill -f "kubectl port-forward" || true
+# Replace PORT with the port number
+sudo fuser -k 3000/tcp
+sudo fuser -k 3001/tcp
+sudo fuser -k 3002/tcp
+sudo fuser -k 3003/tcp
+
 echo "🚀 Starting port-forwarding for all services (replicas = 1)..."
 
 # --- FRONTENDS (ClusterIP service, stable because 1 replica) ---
