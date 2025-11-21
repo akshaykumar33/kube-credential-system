@@ -26,11 +26,11 @@ spec:
         # - name: VITE_API_URL
         #   value: "http://verification-service:3000"
         #for browser  
-          - name: VITE_API_URL
-            value: "http://issuance-service.kube-credential.svc.cluster.local:3000"
-        #for pods acessing each other outside
           # - name: VITE_API_URL
-          #   value: "http://<EC2_IP>:3000"
+          #   value: "http://issuance-service.kube-credential.svc.cluster.local:3000"
+        #for pods acessing each other outside
+          - name: VITE_API_URL
+            value: "http://3.110.212.85:3000"
         resources:
           limits:
             memory: "125Mi"
