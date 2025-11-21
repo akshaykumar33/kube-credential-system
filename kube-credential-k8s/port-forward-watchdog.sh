@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Prevent duplicate watchdogs
+if pgrep -f "port-forward-watchdog.sh" | grep -v $$ >/dev/null; then
+  echo "⚠️ Another watchdog already running. Exiting."
+  exit 0
+fi
+
+
 NAMESPACE="kube-credential"
 LOG_DIR="./port-forward-logs"
 mkdir -p "$LOG_DIR"
@@ -22,8 +29,9 @@ for PORT in "${PORTS[@]}"; do
   sudo fuser -k "$PORT"/tcp >/dev/null 2>&1 || true
 done
 
-echo "🚀 Starting single-process auto-healing port-forward watchdog"
-echo "📂 Logs: $LOG_DIR"
+echo "🚀 Launching auto-healing port-forward watchdog service"
+echo "📂 Logs directory: $LOG_DIR"
+
 
 run_forward_loop() {
   local LABEL="$1"
