@@ -322,6 +322,22 @@ jobs:
 
           echo "🔹 Navigating to Kubernetes manifests folder..."
           cd ~/kube-credential-system/kube-credential-k8s/
+          # Detect memory
+          TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+          TOTAL_MB=$((TOTAL_MEM / 1024))
+          
+          if [ $TOTAL_MB -gt 7000 ]; then
+              MK_MEM=4096
+          elif [ $TOTAL_MB -gt 5000 ]; then
+              MK_MEM=3072
+          else
+              MK_MEM=2048
+          fi
+          
+          echo "🧠 Auto-selecting Minikube memory: ${MK_MEM}MB"
+          
+          echo "🚀 Starting Minikube..."
+          minikube start --driver=docker --memory=${MK_MEM} --cpus=2
 
           if [ ! -f deploy.sh ]; then
             echo "❌ deploy.sh not found!"
