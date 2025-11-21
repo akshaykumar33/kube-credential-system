@@ -292,28 +292,32 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/kube-credential-verification-ui:latest
 
-    # 6️⃣ Copy Only Kubernetes Manifests to EC2
-    - name: Copy Kubernetes manifests to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ubuntu
-        key: ${{ secrets.EC2_SSH_KEY }}
-        source: "./kube-credential-k8s/"
-        target: "~/kube-credential-system/"
-
-    # 7️⃣ Deploy on EC2 (Blocking Execution)
-    - name: Deploy to EC2
+    # 6️⃣ Cleanup Old Deployment and Deploy on EC2
+    - name: Cleanup & Deploy to EC2
       uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
+        timeout: 1200s
         script: |
-          echo "🧹 Cleaning old folders..."
-          rm -rf ~/kube-credential-system ~/kube-credential || true
+          echo "🛑 Stopping Minikube..."
+          minikube stop || true
 
-          echo "📥 Cloning repository..."
+          echo "💣 Removing Minikube completely..."
+          minikube delete --all --purge || true
+
+          echo "🧹 Cleaning Docker system..."
+          docker system prune -a --volumes -f || true
+
+          echo "🗑️ Removing leftover Docker volumes..."
+          sudo rm -rf /var/lib/docker/volumes/* || true
+
+          echo "🧽 Cleaning Minikube directory..."
+          sudo rm -rf ~/.minikube || true
+
+          echo "📥 Cloning fresh repo..."
+          rm -rf ~/kube-credential-system || true
           git clone https://github.com/akshaykumar33/kube-credential-system.git
 
           echo "🔹 Navigating to Kubernetes manifests folder..."
@@ -328,8 +332,8 @@ jobs:
           echo "🚀 Running deploy.sh..."
           ./deploy.sh 2>&1 | tee deploy.log
 
-    # 8️⃣ Verify Kubernetes Pods Ready
-    - name: Verify Kubernetes pods
+    # 7️⃣ Verify Kubernetes Pods Ready Post-Deployment
+    - name: Verify Kubernetes Pods
       uses: appleboy/ssh-action@v1.2.0
       with:
         host: ${{ secrets.EC2_HOST }}
@@ -337,18 +341,19 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         timeout: 600s
         script: |
-          echo "🔎 Waiting for pods to become ready..."
-          kubectl wait --for=condition=ready pod --all -n kube-credential --timeout=300s
+          echo "⏳ Waiting for pods to be ready..."
+          kubectl wait --for=condition=ready pod --all -n kube-credential --timeout=300s || exit 1
 
-          echo "📦 Checking readiness status..."
+          echo "🔍 Checking Pod Status..."
           NOT_READY=$(kubectl get pods -n kube-credential --no-headers | awk '$2!="1/1" {print $1}')
 
           if [ ! -z "$NOT_READY" ]; then
-            echo "❌ Deployment failed! The following pods are not ready:"
+            echo "❌ Deployment failed! Unready pods:"
             echo "$NOT_READY"
-            kubectl get pods -n kube-credential
+            kubectl get pods -n kube-credential -o wide
             exit 1
           fi
 
           echo "🎉 SUCCESS — All Pods Running & Ready"
-          kubectl get pods -n kube-credential
+          kubectl get pods -n kube-credential -o wide
+
