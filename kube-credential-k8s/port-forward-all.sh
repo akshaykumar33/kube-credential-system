@@ -1,43 +1,66 @@
 #!/bin/bash
 
-# Namespace
+set -e
+
+# ==================================
+# CONFIGURATION
+# ==================================
 NAMESPACE="kube-credential"
-
-# Log directory
 LOG_DIR="./port-forward-logs"
-mkdir -p $LOG_DIR
+mkdir -p "$LOG_DIR"
 
-echo "💥 Killing any existing port-forward processes..."
+declare -A POD_FORWARD_MAP=(
+  ["issuance-frontend"]="3002:80"
+  ["verification-frontend"]="3003:80"
+  ["issuance-service"]="3000:3000"
+  ["verification-service"]="3001:3001"
+)
+
+PORTS=(3000 3001 3002 3003)
+
+# ==================================
+# CLEANUP
+# ==================================
+echo "🔻 Killing existing port-forward and freeing ports..."
 pkill -f "kubectl port-forward" || true
-# Replace PORT with the port number
-sudo fuser -k 3000/tcp
-sudo fuser -k 3001/tcp
-sudo fuser -k 3002/tcp
-sudo fuser -k 3003/tcp
 
-echo "🚀 Starting port-forwarding for all services (replicas = 1)..."
+for PORT in "${PORTS[@]}"; do
+  sudo fuser -k "$PORT"/tcp || true
+done
 
-# --- FRONTENDS (ClusterIP service, stable because 1 replica) ---
-# Issuance Frontend
-nohup kubectl port-forward -n $NAMESPACE svc/issuance-frontend 3002:80 --address 0.0.0.0 > $LOG_DIR/issuance-frontend.log 2>&1 &
-echo "Issuance Frontend: http://<EC2-IP>:3002"
+echo "🚀 Starting pod-based port-forwarding..."
+echo ""
 
-# Verification Frontend
-nohup kubectl port-forward -n $NAMESPACE svc/verification-frontend 3003:80 --address 0.0.0.0 > $LOG_DIR/verification-frontend.log 2>&1 &
-echo "Verification Frontend: http://<EC2-IP>:3003"
+# ==================================
+# PORT FORWARD LOOP
+# ==================================
+for LABEL in "${!POD_FORWARD_MAP[@]}"; do
+  PORT_MAP="${POD_FORWARD_MAP[$LABEL]}"
 
-# --- BACKENDS (ClusterIP service, stable because 1 replica) ---
-# Issuance Backend
-nohup kubectl port-forward -n $NAMESPACE svc/issuance-service 3000:3000 --address 0.0.0.0 > $LOG_DIR/issuance-backend.log 2>&1 &
-echo "Issuance Backend:  http://<EC2-IP>:3000"
+  POD_NAME=$(kubectl get pod -n "$NAMESPACE" -l "app=$LABEL" \
+    -o jsonpath="{.items[0].metadata.name}")
 
-# Verification Backend
-nohup kubectl port-forward -n $NAMESPACE svc/verification-service 3001:3001 --address 0.0.0.0 > $LOG_DIR/verification-backend.log 2>&1 &
-echo "Verification Backend:  http://<EC2-IP>:3001"
+  if [ -z "$POD_NAME" ]; then
+    echo "❌ No running pod found for label app=$LABEL"
+    continue
+  fi
 
-echo "✅ All services are port-forwarded and running in background."
-echo "Logs are available in $LOG_DIR"
-echo "example to check error logs: tail -f ./port-forward-logs/issuance-frontend.log"
+  echo "🔗 Forwarding $LABEL (pod: $POD_NAME) on $PORT_MAP"
 
-# Show running jobs
+  nohup kubectl port-forward -n "$NAMESPACE" "$POD_NAME" $PORT_MAP \
+    --address=0.0.0.0 > "$LOG_DIR/$LABEL.log" 2>&1 &
+
+  # Show friendly access mapping
+  HOSTPORT=$(echo "$PORT_MAP" | cut -d':' -f1)
+  echo "🌐 Available: http://<EC2-IP>:$HOSTPORT"
+  echo ""
+done
+
+# ==================================
+# SUMMARY
+# ==================================
+echo "🎉 All port-forward tasks started!"
+echo "📂 Logs available in: $LOG_DIR"
+echo "👉 tail -f $LOG_DIR/issuance-service.log"
+echo ""
 jobs
