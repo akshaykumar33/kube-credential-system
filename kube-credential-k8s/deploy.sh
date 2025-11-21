@@ -227,19 +227,33 @@ else
     echo "❌ initial-setup.sh missing!"
     exit 1
 fi
-
 # -------------------------------------------------------
 # Step 2: Port forwarding all services
 # -------------------------------------------------------
 echo ""
-echo "🔗 Starting port-forwarding of all services..."
+echo "🔗 Starting initial port-forwarding..."
 
 if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
     chmod +x "$SCRIPT_DIR/port-forward-all.sh"
-    nohup "$SCRIPT_DIR/port-forward-all.sh" > watchdog.log 2>&1 &
+    "$SCRIPT_DIR/port-forward-all.sh"
 else
     echo "❌ port-forward-all.sh missing!"
 fi
+
+# -------------------------------------------------------
+# Step 3: Start Watchdog for self-healing PF
+# -------------------------------------------------------
+echo ""
+echo "🛡️ Starting port-forward watchdog service..."
+
+if [ -f "$SCRIPT_DIR/port-forward-watchdog.sh" ]; then
+    chmod +x "$SCRIPT_DIR/port-forward-watchdog.sh"
+    nohup "$SCRIPT_DIR/port-forward-watchdog.sh" > "$SCRIPT_DIR/port-forward-logs/watchdog.log" 2>&1 &
+    echo "🔍 Watchdog running in background (auto restart on failure)"
+else
+    echo "❌ port-forward-watchdog.sh missing!"
+fi
+
 
 echo ""
 echo "🎉 Deployment completed successfully!"
