@@ -29,10 +29,10 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-issuance
     ports:
-      - "7000:3000"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=7000
+      - PORT=3000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=*
@@ -51,10 +51,10 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-verification
     ports:
-      - "7001:3001"
+      - "3001:3001"
     environment:
       - NODE_ENV=production
-      - PORT=7001
+      - PORT=3001
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=*
@@ -75,9 +75,9 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-issuance-ui
     ports:
-      - "7002:80"
+      - "3002:80"
     environment:
-      - VITE_API_URL=http://issuance-service:7000
+      - VITE_API_URL=http://issuance-service:3000
         # - VITE_API_URL=http://issuance-service.kube-credential.svc.cluster.local:3000
     depends_on:
       - issuance-service
@@ -90,9 +90,9 @@ services:
       dockerfile: Dockerfile
     container_name: kube-credential-verification-ui
     ports:
-      - "7003:80"
+      - "3003:80"
     environment:
-      - VITE_API_URL=http://verification-service:7001
+      - VITE_API_URL=http://verification-service:3001
         # - VITE_API_URL='http://verification-service.kube-credential.svc.cluster.local:3001'
     depends_on:
       - verification-service
