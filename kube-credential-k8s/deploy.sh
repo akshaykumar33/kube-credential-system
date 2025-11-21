@@ -236,7 +236,7 @@ echo "🔗 Starting port-forwarding of all services..."
 
 if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
     chmod +x "$SCRIPT_DIR/port-forward-all.sh"
-    "$SCRIPT_DIR/port-forward-all.sh"
+    nohup "$SCRIPT_DIR/port-forward-all.sh" > watchdog.log 2>&1 &
 else
     echo "❌ port-forward-all.sh missing!"
 fi
