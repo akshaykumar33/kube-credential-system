@@ -1,71 +1,66 @@
 #!/bin/bash
-# deploy.sh
-# Full automatic deployment with NodePort + Port Forwarding
-# Location: kube-credential-system/kube-credential-k8s
 
 set -e
 
-# Resolve script directory dynamically
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
+# ==================================
+# CONFIGURATION
+# ==================================
 NAMESPACE="kube-credential"
+LOG_DIR="./port-forward-logs"
+mkdir -p "$LOG_DIR"
 
-echo "🚀 Starting automated deployment process..."
-echo "============================================"
+declare -A POD_FORWARD_MAP=(
+  ["issuance-frontend"]="3002:80"
+  ["verification-frontend"]="3003:80"
+  ["issuance-service"]="3000:3000"
+  ["verification-service"]="3001:3001"
+)
 
-# -------------------------------------------------------
-# Step 0: Check Namespace and clean only if exists
-# -------------------------------------------------------
-if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
-    echo "🧹 Namespace exists — Starting cleanup using undeploy.sh"
+PORTS=(3000 3001 3002 3003)
 
-    if [ -f "$SCRIPT_DIR/undeploy.sh" ]; then
-        chmod +x "$SCRIPT_DIR/undeploy.sh"
-        echo "y" | "$SCRIPT_DIR/undeploy.sh"   # auto-confirm deletion
-    else
-        echo "❌ undeploy.sh not found in $SCRIPT_DIR"
-    fi
-else
-    echo "ℹ️ Namespace $NAMESPACE does not exist — skipping cleanup"
-fi
+# ==================================
+# CLEANUP
+# ==================================
+echo "🔻 Killing existing port-forward and freeing ports..."
+pkill -f "kubectl port-forward" || true
 
+for PORT in "${PORTS[@]}"; do
+  sudo fuser -k "$PORT"/tcp || true
+done
+
+echo "🚀 Starting pod-based port-forwarding..."
 echo ""
-echo "⚙️ Deploying new infrastructure and services (NodePort mode)"
 
-# -------------------------------------------------------
-# Step 1: Run initial-setup (force NodePort)
-# -------------------------------------------------------
-if [ -f "$SCRIPT_DIR/initial-setup.sh" ]; then
-    chmod +x "$SCRIPT_DIR/initial-setup.sh"
-    echo "N" | "$SCRIPT_DIR/initial-setup.sh"     # answer 'N' to choose NodePort
-else
-    echo "❌ initial-setup.sh missing!"
-    exit 1
-fi
+# ==================================
+# PORT FORWARD LOOP
+# ==================================
+for LABEL in "${!POD_FORWARD_MAP[@]}"; do
+  PORT_MAP="${POD_FORWARD_MAP[$LABEL]}"
 
-# -------------------------------------------------------
-# Step 2: Port forwarding all services
-# -------------------------------------------------------
-echo ""
-echo "🔗 Starting port-forwarding of all services..."
+  POD_NAME=$(kubectl get pod -n "$NAMESPACE" -l "app=$LABEL" \
+    -o jsonpath="{.items[0].metadata.name}")
 
-if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
-    chmod +x "$SCRIPT_DIR/port-forward-all.sh"
-    "$SCRIPT_DIR/port-forward-all.sh"
-else
-    echo "❌ port-forward-all.sh missing!"
-fi
+  if [ -z "$POD_NAME" ]; then
+    echo "❌ No running pod found for label app=$LABEL"
+    continue
+  fi
 
+  echo "🔗 Forwarding $LABEL (pod: $POD_NAME) on $PORT_MAP"
+
+  nohup kubectl port-forward -n "$NAMESPACE" "$POD_NAME" $PORT_MAP \
+    --address=0.0.0.0 > "$LOG_DIR/$LABEL.log" 2>&1 &
+
+  # Show friendly access mapping
+  HOSTPORT=$(echo "$PORT_MAP" | cut -d':' -f1)
+  echo "🌐 Available: http://<EC2-IP>:$HOSTPORT"
+  echo ""
+done
+
+# ==================================
+# SUMMARY
+# ==================================
+echo "🎉 All port-forward tasks started!"
+echo "📂 Logs available in: $LOG_DIR"
+echo "👉 tail -f $LOG_DIR/issuance-service.log"
 echo ""
-echo "🎉 Deployment completed successfully!"
-echo "🌍 Access URLs:"
-echo "   http://<EC2-IP>:3000  (Issuance Backend)"
-echo "   http://<EC2-IP>:3001  (Verification Backend)"
-echo "   http://<EC2-IP>:3002  (Issuance Frontend)"
-echo "   http://<EC2-IP>:3003  (Verification Frontend)"
-echo ""
-echo "📌 Logs:"
-echo "   tail -f port-forward-logs/issuance-service.log"
-echo ""
-echo "============================================"
-echo "🚀 System ready!"
+jobs

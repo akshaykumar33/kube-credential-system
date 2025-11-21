@@ -183,47 +183,74 @@
 # kubectl wait --for=condition=available --timeout=600s deployment --all -n kube-credential
 
 # echo "🎉 Deployment complete!"
-
 #!/bin/bash
 # deploy.sh
-# Full reset + NodePort deployment + port-forwarding
-# Directory: kube-credential-system/kube-credential-k8s
+# Full automatic deployment with NodePort + Port Forwarding
+# Location: kube-credential-system/kube-credential-k8s
 
 set -e
 
-# ✅ Set the script directory explicitly
-SCRIPT_DIR="/home/ubuntu/kube-credential-system/kube-credential-k8s"  # change this to your full path
+# Resolve script directory dynamically
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "🚀 Starting full deployment sequence..."
-echo "==================================="
+NAMESPACE="kube-credential"
 
-# Step 1: Cleanup
-if [ -f "$SCRIPT_DIR/undeploy.sh" ]; then
-    echo "🧹 Running undeploy.sh to clean existing resources..."
-    chmod +x "$SCRIPT_DIR/undeploy.sh"
-    "$SCRIPT_DIR/undeploy.sh"
+echo "🚀 Starting automated deployment process..."
+echo "============================================"
+
+# -------------------------------------------------------
+# Step 0: Check Namespace and clean only if exists
+# -------------------------------------------------------
+if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    echo "🧹 Namespace exists — Starting cleanup using undeploy.sh"
+
+    if [ -f "$SCRIPT_DIR/undeploy.sh" ]; then
+        chmod +x "$SCRIPT_DIR/undeploy.sh"
+        echo "y" | "$SCRIPT_DIR/undeploy.sh"   # auto-confirm deletion
+    else
+        echo "❌ undeploy.sh not found in $SCRIPT_DIR"
+    fi
 else
-    echo "⚠️ undeploy.sh not found!"
-fi
-
-# Step 2: Initial setup (force NodePort)
-if [ -f "$SCRIPT_DIR/initial-setup.sh" ]; then
-    echo "⚙️ Running initial-setup.sh (NodePort mode, non-interactive)..."
-    chmod +x "$SCRIPT_DIR/initial-setup.sh"
-    # Pipe "N" automatically to skip ingress and choose NodePort
-    echo "N" | "$SCRIPT_DIR/initial-setup.sh"
-else
-    echo "⚠️ initial-setup.sh not found!"
-fi
-
-# Step 3: Port-forward all services
-if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
-    echo "🔗 Starting port-forwarding in background..."
-    chmod +x "$SCRIPT_DIR/port-forward-all.sh"
-    "$SCRIPT_DIR/port-forward-all.sh"
-else
-    echo "⚠️ port-forward-all.sh not found!"
+    echo "ℹ️ Namespace $NAMESPACE does not exist — skipping cleanup"
 fi
 
 echo ""
-echo "🎉 Full deployment with NodePort + port-forwarding complete!"
+echo "⚙️ Deploying new infrastructure and services (NodePort mode)"
+
+# -------------------------------------------------------
+# Step 1: Run initial-setup (force NodePort)
+# -------------------------------------------------------
+if [ -f "$SCRIPT_DIR/initial-setup.sh" ]; then
+    chmod +x "$SCRIPT_DIR/initial-setup.sh"
+    echo "N" | "$SCRIPT_DIR/initial-setup.sh"     # answer 'N' to choose NodePort
+else
+    echo "❌ initial-setup.sh missing!"
+    exit 1
+fi
+
+# -------------------------------------------------------
+# Step 2: Port forwarding all services
+# -------------------------------------------------------
+echo ""
+echo "🔗 Starting port-forwarding of all services..."
+
+if [ -f "$SCRIPT_DIR/port-forward-all.sh" ]; then
+    chmod +x "$SCRIPT_DIR/port-forward-all.sh"
+    "$SCRIPT_DIR/port-forward-all.sh"
+else
+    echo "❌ port-forward-all.sh missing!"
+fi
+
+echo ""
+echo "🎉 Deployment completed successfully!"
+echo "🌍 Access URLs:"
+echo "   http://<EC2-IP>:3000  (Issuance Backend)"
+echo "   http://<EC2-IP>:3001  (Verification Backend)"
+echo "   http://<EC2-IP>:3002  (Issuance Frontend)"
+echo "   http://<EC2-IP>:3003  (Verification Frontend)"
+echo ""
+echo "📌 Logs:"
+echo "   tail -f port-forward-logs/issuance-service.log"
+echo ""
+echo "============================================"
+echo "🚀 System ready!"
