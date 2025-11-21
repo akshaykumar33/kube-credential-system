@@ -1,1 +1,1 @@
-const API_BASE_URL = 'http://${{ secrets.EC2_HOST }}:3001'
+// const API_BASE_URL = 'http://${{ secrets.EC2_HOST }}:3001'
