@@ -22,6 +22,8 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 COPY --from=builder /app/verification-app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY public/config.js /usr/share/nginx/html/config.js
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# CMD ["nginx", "-g", "daemon off;"]
+CMD ["/bin/sh", "-c", "envsubst < /usr/share/nginx/html/config.js > /usr/share/nginx/html/config.js && nginx -g 'daemon off;'"]
