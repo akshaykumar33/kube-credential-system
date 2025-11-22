@@ -1,5 +1,8 @@
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+K8S_DIR="$SCRIPT_DIR/k8s"
+
 echo "🚀 Deploying Kube Credential System to Kubernetes..."
 echo "=================================================="
 
@@ -20,29 +23,29 @@ echo ""
 
 # Apply core manifests in order
 echo "📋 Creating namespace..."
-kubectl apply -f k8s/namespace.yaml
+kubectl apply -f "$K8S_DIR/namespace.yaml"
 
 echo "💾 Creating persistent volume claims..."
-kubectl apply -f k8s/pvc-redis.yaml
-kubectl apply -f k8s/pvc-issuance.yaml
-kubectl apply -f k8s/pvc-verification.yaml
+kubectl apply -f "$K8S_DIR/pvc-redis.yaml"
+kubectl apply -f "$K8S_DIR/pvc-issuance.yaml"
+kubectl apply -f "$K8S_DIR/pvc-verification.yaml"
 
 echo "📦 Creating ConfigMap..."
-kubectl apply -f k8s/configmap.yaml
+kubectl apply -f "$K8S_DIR/configmap.yaml"
 
 # Deploy Redis
 echo "🗄️ Deploying Redis..."
-kubectl apply -f k8s/redis.yaml
+kubectl apply -f "$K8S_DIR/redis.yaml"
 
 echo "⏳ Waiting for Redis to be ready..."
 kubectl wait --for=condition=available --timeout=500s deployment/redis -n kube-credential
 
 # Deploy Backend Services
 echo "🏢 Deploying Issuance Service..."
-kubectl apply -f k8s/issuance.yaml
+kubectl apply -f "$K8S_DIR/issuance.yaml"
 
 echo "🔍 Deploying Verification Service..."
-kubectl apply -f k8s/verification.yaml
+kubectl apply -f "$K8S_DIR/verification.yaml"
 
 echo "⏳ Waiting for backend services to be ready..."
 kubectl wait --for=condition=available --timeout=500s deployment/issuance-service -n kube-credential
@@ -50,10 +53,10 @@ kubectl wait --for=condition=available --timeout=500s deployment/verification-se
 
 # Deploy Frontends
 echo "🌐 Deploying Frontend Applications..."
-# kubectl apply -f k8s/issuance-frontend.yaml
-# kubectl apply -f k8s/verification-frontend.yaml
-envsubst < k8s/issuance-frontend.yaml | kubectl apply -f -
-envsubst < k8s/verification-frontend.yaml | kubectl apply -f -
+# kubectl apply -f "$K8S_DIR/issuance-frontend.yaml"
+# kubectl apply -f "$K8S_DIR/verification-frontend.yaml"
+envsubst < "$K8S_DIR/issuance-frontend.yaml" | kubectl apply -f -
+envsubst < "$K8S_DIR/verification-frontend.yaml" | kubectl apply -f -
 
 echo "⏳ Waiting for frontends to be ready..."
 kubectl wait --for=condition=available --timeout=500s deployment/issuance-frontend -n kube-credential
@@ -83,7 +86,7 @@ case $access_type in
         kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=500s
 
         # Apply your ingress resource
-        kubectl apply -f k8s/ingress.yaml
+        kubectl apply -f "$K8S_DIR/ingress.yaml"
 
         echo ""
         echo "✅ Ingress deployed!"
@@ -129,7 +132,7 @@ case $access_type in
 
     [Nn]* )
         echo "Deploying NodePort services..."
-        kubectl apply -f k8s/services-nodeport.yaml
+        kubectl apply -f "$K8S_DIR/services-nodeport.yaml"
         echo ""
         echo "✅ NodePort services deployed."
         echo "Access URLs (replace <NODE-IP> with your cluster node IP):"
