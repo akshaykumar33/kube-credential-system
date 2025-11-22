@@ -7,7 +7,7 @@ import {
   validCredentialRequest, 
   mockIssuedCredential 
 } from '../fixtures/issuance.fixtures';
-import { describe, test, expect, beforeEach, beforeAll, jest, it, afterEach } from '@jest/globals';
+import { describe, expect, beforeEach, jest, it, afterEach } from '@jest/globals';
 
 // Mock dependencies
 jest.mock('../../src/utils/database');

@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from '../../src/app';
 import { database } from '../../src/utils/database';
 import { validCredentialRequest, invalidCredentialRequest } from '../fixtures/issuance.fixtures';
-
+import { describe, expect, beforeEach, jest, it,beforeAll } from '@jest/globals';
 // Mock dependencies
 jest.mock('../../src/utils/database');
 jest.mock('../../src/services/eventService');
