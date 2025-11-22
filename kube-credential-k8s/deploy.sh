@@ -16,15 +16,18 @@ echo "============================================"
 # -------------------------------------------------------
 # Step 0: Detect EC2 Public IP dynamically
 # -------------------------------------------------------
-EC2_HOST=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+# Fetch EC2 public IP safely using IMDSv2
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+EC2_HOST=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+
 if [ -z "$EC2_HOST" ]; then
-    echo "❌ Could not detect EC2 public IP!"
+    echo "❌ Could not detect EC2 public IP! Are you running on EC2 with IMDS access?"
     exit 1
 fi
+
 echo "ℹ️ Using EC2 Host: $EC2_HOST"
 export EC2_HOST
-
-echo "EC2_HOST exported"
 
 # -------------------------------------------------------
 # Step 1: Check Namespace and clean only if exists
