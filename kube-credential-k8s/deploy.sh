@@ -14,7 +14,20 @@ echo "🚀 Starting automated deployment process..."
 echo "============================================"
 
 # -------------------------------------------------------
-# Step 0: Check Namespace and clean only if exists
+# Step 0: Detect EC2 Public IP dynamically
+# -------------------------------------------------------
+EC2_HOST=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+if [ -z "$EC2_HOST" ]; then
+    echo "❌ Could not detect EC2 public IP!"
+    exit 1
+fi
+echo "ℹ️ Using EC2 Host: $EC2_HOST"
+export EC2_HOST
+
+echo "EC2_HOST exported"
+
+# -------------------------------------------------------
+# Step 1: Check Namespace and clean only if exists
 # -------------------------------------------------------
 if kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
     echo "🧹 Namespace exists — Starting cleanup using undeploy.sh"
@@ -33,7 +46,7 @@ echo ""
 echo "⚙️ Deploying new infrastructure and services (NodePort mode)"
 
 # -------------------------------------------------------
-# Step 1: Run initial-setup (force NodePort)
+# Step 2: Run initial-setup (force NodePort)
 # -------------------------------------------------------
 if [ -f "$SCRIPT_DIR/initial-setup.sh" ]; then
     chmod +x "$SCRIPT_DIR/initial-setup.sh"
@@ -43,7 +56,7 @@ else
     exit 1
 fi
 # -------------------------------------------------------
-# Step 2: Start WATCHDOG (single manager for port-forwards)
+# Step 3: Start WATCHDOG (single manager for port-forwards)
 # -------------------------------------------------------
 echo ""
 echo "🛡️ Starting port-forward watchdog service..."

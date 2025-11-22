@@ -50,8 +50,10 @@ kubectl wait --for=condition=available --timeout=500s deployment/verification-se
 
 # Deploy Frontends
 echo "🌐 Deploying Frontend Applications..."
-kubectl apply -f k8s/issuance-frontend.yaml
-kubectl apply -f k8s/verification-frontend.yaml
+# kubectl apply -f k8s/issuance-frontend.yaml
+# kubectl apply -f k8s/verification-frontend.yaml
+envsubst < k8s/issuance-frontend.yaml | kubectl apply -f -
+envsubst < k8s/verification-frontend.yaml | kubectl apply -f -
 
 echo "⏳ Waiting for frontends to be ready..."
 kubectl wait --for=condition=available --timeout=500s deployment/issuance-frontend -n kube-credential
