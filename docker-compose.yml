@@ -77,8 +77,10 @@ services:
     ports:
       - "3002:80"
     environment:
-      - VITE_API_URL=http://issuance-service:3000
-      - API_BASE_URL=http://issuance-service:3000
+          - VITE_API_URL=http://localhost:3000
+          - API_BASE_URL=http://localhost:3000
+      # - VITE_API_URL=http://issuance-service:3000
+      # - API_BASE_URL=http://issuance-service:3000
         # - VITE_API_URL=http://issuance-service.kube-credential.svc.cluster.local:3000
         # - VITE_API_URL=http://3.110.212.85:3000
     depends_on:
@@ -94,8 +96,10 @@ services:
     ports:
       - "3003:80"
     environment:
-      - VITE_API_URL=http://verification-service:3001
-      - API_BASE_URL=http://verification-service:3001
+      - VITE_API_URL=http://localhost:3001
+      - API_BASE_URL=http://localhost:3001
+      # - VITE_API_URL=http://verification-service:3001
+      # - API_BASE_URL=http://verification-service:3001
         # - VITE_API_URL='http://verification-service.kube-credential.svc.cluster.local:3001'
         # - VITE_API_URL=http://3.110.212.85:3001
     depends_on:
