@@ -13,3 +13,4 @@ README.md
 .env
 logs/
 *.log
+__tests__
