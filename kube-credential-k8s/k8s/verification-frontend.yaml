@@ -31,6 +31,8 @@ spec:
         #for pods acessing each other  
           - name: VITE_API_URL
             value: "http://3.110.212.85:3001"
+          - name: API_BASE_URL
+            value: "http://3.110.212.85:3001"
         resources:
           limits:
             memory: "125Mi"
