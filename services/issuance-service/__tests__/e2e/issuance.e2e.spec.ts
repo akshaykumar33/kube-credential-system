@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 import request from 'supertest';
 import { App } from '../../src/app';
 import { database } from '../../src/utils/database';
-
+import { describe, expect,beforeAll,afterAll, jest, it } from '@jest/globals';
 // Mock missing DB helper methods as no-ops for test purposes
 (database as any).clearCredentials = jest.fn(() => Promise.resolve());
 (database as any).addFailedEvent = jest.fn(() => Promise.resolve());
