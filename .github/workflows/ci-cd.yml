@@ -316,12 +316,17 @@ jobs:
           echo "🧽 Cleaning Minikube directory..."
           sudo rm -rf ~/.minikube || true
 
-          echo "📥 Cloning fresh repo..."
-          rm -rf ~/kube-credential-system || true
-          git clone https://github.com/akshaykumar33/kube-credential-system.git
+          # echo "📥 Cloning fresh repo..."
+          # rm -rf ~/kube-credential-system || true
+          # git clone https://github.com/akshaykumar33/kube-credential-system.git
+
+          cd ~/kube-credential-system || exit 1
+          echo "🔗 fetching latest git files"
+          git fetch origin
+          git reset --hard origin/main
 
           echo "🔹 Navigating to Kubernetes manifests folder..."
-          cd ~/kube-credential-system/kube-credential-k8s/
+          cd ~/kube-credential-k8s/
           # Detect memory
           TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
           TOTAL_MB=$((TOTAL_MEM / 1024))
