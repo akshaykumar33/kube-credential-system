@@ -325,8 +325,8 @@ jobs:
           git fetch origin
           git reset --hard origin/main
 
-          echo "🔹 Navigating to Kubernetes manifests folder..."
-          cd ~/kube-credential-k8s/
+          # echo "🔹 Navigating to Kubernetes manifests folder..."
+          # cd ~/kube-credential-k8s/
           # Detect memory
           TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
           TOTAL_MB=$((TOTAL_MEM / 1024))
@@ -344,14 +344,14 @@ jobs:
           echo "🚀 Starting Minikube..."
           minikube start --driver=docker --memory=${MK_MEM} --cpus=2
 
-          if [ ! -f deploy.sh ]; then
-            echo "❌ deploy.sh not found!"
+          if [ ! -f full-clean-deploy.sh ]; then
+            echo "❌ full-clean-deploy.sh not found!"
             exit 1
           fi
 
-          chmod +x deploy.sh
-          echo "🚀 Running deploy.sh..."
-          ./deploy.sh 2>&1 | tee deploy.log
+          chmod +x full-clean-deploy.sh
+          echo "🚀 Running full-clean-deploy.sh..."
+          ./full-clean-deploy.sh 2>&1 | tee full-clean-deploy.log
 
     # 7️⃣ Verify Kubernetes Pods Ready Post-Deployment
     - name: Verify Kubernetes Pods
