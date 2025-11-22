@@ -99,7 +99,7 @@ export class App {
     });
   }
 
-  private setupGracefulShutdown(): void {
+  public setupGracefulShutdown(): void {
     const gracefulShutdown = async (signal: string) => {
       logger.info(`📡 Received ${signal}. Starting graceful shutdown...`);
 
