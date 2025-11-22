@@ -3,7 +3,7 @@ import { VerificationRequest, VerificationResponse } from '../types/credential';
 
 // Use runtime config, fallback to localhost
 const API_BASE_URL =
-  (window as any)._env_?.API_BASE_URL || import.meta.env.VITE_API_URL || 'http://3.110.212.85:3001'  || 'http://localhost:3001';
+  (window as any)._env_?.API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   console.log("API_BASE_URL in verification-app",API_BASE_URL,import.meta.env.VITE_API_URL,(window as any)._env_?.API_BASE_URL)
 export class ApiService {
