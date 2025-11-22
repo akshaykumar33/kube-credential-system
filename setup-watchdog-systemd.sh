@@ -16,21 +16,37 @@ fi
 
 # Create systemd service
 sudo bash -c "cat >/etc/systemd/system/$SERVICE_NAME.service" <<EOF
+# [Unit]
+# Description=Kubernetes Port Forward Watchdog
+# After=network.target
+
+# [Service]
+# User=ubuntu
+# WorkingDirectory=/home/ubuntu/kube-credential-system/kube-credential-k8s
+# ExecStart=/bin/bash $SCRIPT_PATH
+# Restart=always
+# RestartSec=3
+# StandardOutput=append:/var/log/$SERVICE_NAME.log
+# StandardError=append:/var/log/$SERVICE_NAME.err
+
+# [Install]
+# WantedBy=multi-user.target
 [Unit]
 Description=Kubernetes Port Forward Watchdog
 After=network.target
 
 [Service]
 User=ubuntu
-WorkingDirectory=/home/ubuntu/kube-credential-system/kube-credential-k8s
-ExecStart=/bin/bash $SCRIPT_PATH
+WorkingDirectory=/home/ubuntu/kube-credential-system
+ExecStart=/bin/bash /home/ubuntu/kube-credential-system/kube-credential-k8s/port-forward-watchdog.sh
 Restart=always
-RestartSec=3
-StandardOutput=append:/var/log/$SERVICE_NAME.log
-StandardError=append:/var/log/$SERVICE_NAME.err
+RestartSec=5
+StandardOutput=append:/var/log/kube-port-forward.log
+StandardError=append:/var/log/kube-port-forward.err
 
 [Install]
 WantedBy=multi-user.target
+
 EOF
 
 echo "📦 Reloading systemd..."
