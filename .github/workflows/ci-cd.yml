@@ -312,7 +312,8 @@ jobs:
 
           echo "🗑️ Removing leftover Docker volumes..."
           sudo rm -rf /var/lib/docker/volumes/* || true
-
+          sudo rm -rf /var/lib/docker/overlay2/*
+          
           echo "🧽 Cleaning Minikube directory..."
           sudo rm -rf ~/.minikube || true
 
@@ -330,8 +331,10 @@ jobs:
           # Detect memory
           TOTAL_MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
           TOTAL_MB=$((TOTAL_MEM / 1024))
-          
-          if [ $TOTAL_MB -gt 7000 ]; then
+          CPU_ALLOT=2
+          if [ $TOTAL_MB -gt 9000 ]; then
+              MK_MEM=8192; CPU_ALLOT=3
+          elif [ $TOTAL_MB -gt 7000 ]; then
               MK_MEM=4096
           elif [ $TOTAL_MB -gt 5000 ]; then
               MK_MEM=3072
@@ -339,10 +342,10 @@ jobs:
               MK_MEM=2048
           fi
           
-          echo "🧠 Auto-selecting Minikube memory: ${MK_MEM}MB"
-          
+          echo "🧠 Auto-selecting Minikube memory: ${MK_MEM}MB ${CPU_ALLOT} cpus"
+
           echo "🚀 Starting Minikube..."
-          minikube start --driver=docker --memory=${MK_MEM} --cpus=2
+          minikube start --driver=docker --memory=${MK_MEM} --cpus=${CPU_ALLOT}
 
           if [ ! -f full-clean-deploy.sh ]; then
             echo "❌ full-clean-deploy.sh not found!"
