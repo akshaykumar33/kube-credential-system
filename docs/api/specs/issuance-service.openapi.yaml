@@ -1,0 +1,91 @@
+openapi: 3.1.0
+info:
+  title: Issuance Service API
+  description: API for issuing verifiable credentials
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api/v1
+    description: Development server
+security:
+  - bearerAuth: []
+paths:
+  /credentials/issue:
+    post:
+      operationId: issueCredential
+      summary: Issue a new credential
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - holderName
+                - credentialType
+                - issuerName
+              properties:
+                holderName:
+                  type: string
+                  description: Full name of the credential holder
+                credentialType:
+                  type: string
+                  description: Type of the credential
+                  enum: ["University Degree", "Professional Certificate", "ID Card"]
+                issuerName:
+                  type: string
+                  description: Name of the issuing organization
+                expiryDate:
+                  type: [string, "null"]
+                  format: date
+                  description: Optional expiration date (YYYY-MM-DD)
+                metadata:
+                  type: [object, "null"]
+                  additionalProperties: true
+                  description: Additional metadata for the credential
+      responses:
+        '201':
+          description: Credential issued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  credential:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      holderName:
+                        type: string
+                      credentialType:
+                        type: string
+                      issuerName:
+                        type: string
+                      issuedAt:
+                        type: string
+                        format: date-time
+                      expiryDate:
+                        type: [string, "null"]
+                        format: date
+                      metadata:
+                        type: [object, "null"]
+                        additionalProperties: true
+        '400':
+          description: Bad Request - Invalid input
+        '409':
+          description: Conflict - Credential already exists
+        '500':
+          description: Internal Server Error
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

@@ -1,0 +1,74 @@
+openapi: 3.1.0
+info:
+  title: Verification Service API
+  description: API for verifying credentials
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api/v1
+    description: Development server
+security:
+  - bearerAuth: []
+paths:
+  /credentials/verify:
+    post:
+      operationId: verifyCredential
+      summary: Verify a credential
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - credentialId
+              properties:
+                credentialId:
+                  type: string
+                  description: ID of the credential to verify
+      responses:
+        '200':
+          description: Credential verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  valid:
+                    type: boolean
+                    description: Whether the credential is valid
+                  credential:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      holderName:
+                        type: string
+                      credentialType:
+                        type: string
+                      issuerName:
+                        type: string
+                      issuedAt:
+                        type: string
+                        format: date-time
+                      verifiedAt:
+                        type: string
+                        format: date-time
+        '400':
+          description: Bad Request - Invalid input
+        '404':
+          description: Credential not found
+        '500':
+          description: Internal Server Error
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

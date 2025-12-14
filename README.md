@@ -72,12 +72,53 @@ cd frontend/issuance-app && npm run dev
 cd frontend/verification-app && npm run dev
 ```
 
+### ✅ Test Suite
+
+```bash
+npm run test:issuance           # Jest unit tests for issuance service
+npm run test:verification       # Jest unit tests for verification service
+npm run test:issuance-app       # Vitest + RTL tests for issuance frontend
+npm run test:verification-app   # Vitest + RTL tests for verification frontend
+npm run test:all                # Run every suite sequentially
+npm run test:coverage           # Combined coverage reports
+```
+
+- Backend tests live in `services/<service>/src/__tests__` and mock Redis/SQLite dependencies.
+- Frontend tests live in `frontend/<app>/src/__tests__` with jsdom + Testing Library.
+
 ## 📊 Monitoring
 
 Access admin endpoints:
 - Queue Stats: `GET /admin/queue-stats`
 - Health Check: `GET /health`
 - Reprocess Failed: `POST /admin/reprocess-failed`
+
+## 📚 Documentation
+
+Extended docs now live under [`docs/`](./docs):
+- `docs/api/*.md` – Endpoint specs for issuance & verification services
+- `docs/project/architecture.md` – System diagram and reliability notes
+- `docs/project/testing-strategy.md` – Details on the unified test suite
+- `docs/project/operations.md` – Deployment & maintenance checklist
+- `docs/api/specs/*.openapi.yaml` – **Source of truth OpenAPI specs rendered through Scalar + Swagger**
+
+### API Docs with Scalar + Swagger
+
+Every backend service must expose an OpenAPI 3 spec located in `docs/api/specs`. Use these commands to work with them:
+
+```bash
+# Preview Scalar + Swagger for both services
+npm run docs:preview
+
+# Individual renderers
+npm run docs:scalar
+npm run docs:swagger
+```
+
+- Scalar hosts issuance (port 4000) and verification (port 4001) references with hot reload.
+- Swagger hosts issuance on port 3210 and verification on port 3211.
+
+The Markdown files under `docs/api/*.md` should summarize the same endpoints while the OpenAPI files power interactive docs.
 
 ## 🛠️ Technology Stack
 
